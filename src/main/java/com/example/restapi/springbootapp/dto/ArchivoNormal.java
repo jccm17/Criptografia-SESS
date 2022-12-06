@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class ArchivoNormal implements Serializable{
  
-    @Schema(description = "Metodo de cifrado ejm: Base64", required = true)
+    @Schema(description = "Metodo de cifrado ejm: BASE64, MD5, AES. ETC..", required = true)
     private String metodo;
 
     @Schema(description = "Archivo a cifrar", required = true)

@@ -8,7 +8,7 @@ public class Datos implements Serializable{
 
     private String textoCifrado;
 
-    @Schema(description = "Metodo de descifrado ejm: Base64", required = true)
+    @Schema(description = "Metodo de descifrado ejm: BASE64, MD5, AES. ETC..", required = true)
     private String metodo;
 
     public String getTextoCifrado() {

@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.validation.Valid;
 
-@OpenAPIDefinition(servers = @Server(url = "https://encriptacion-sess.herokuapp.com/"), info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "https://github.com/bchen04/springboot-swagger-rest-api/blob/master/LICENSE"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
+@OpenAPIDefinition(servers = {@Server(url = "https://encriptacion-sess.herokuapp.com/"), @Server(url = "http://localhost:9090")}, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "https://github.com/bchen04/springboot-swagger-rest-api/blob/master/LICENSE"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
 @RequestMapping("v1/")
 public class CifradoController {
@@ -54,7 +54,7 @@ public class CifradoController {
     Uploads f = new Uploads();
     EncriptadorAES aes = new EncriptadorAES();
     EncriptadorMD5 md5 = new EncriptadorMD5();
-    final String claveEncriptacion = "secreto!";
+    final String claveEncriptacion = "cifrado128AES25!";
 
     @Operation(summary = "Retorna Texto en cifrado")
     @ApiResponses(value = {
@@ -70,7 +70,7 @@ public class CifradoController {
                     response.put("metodo", data.getMetodo());
                     break;
                 case "AES":
-                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), "jccm.17"));
+                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), claveEncriptacion));
                     response.put("metodo", data.getMetodo());
                     break;
                 case "MD5":
@@ -105,7 +105,7 @@ public class CifradoController {
                     response.put("metodo", data.getMetodo());
                     break;
                 case "AES":
-                    response.put("textoDescifrado", aes.desencriptar(data.getTextoCifrado(), "jccm.17"));
+                    response.put("textoDescifrado", aes.desencriptar(data.getTextoCifrado(), claveEncriptacion));
                     response.put("metodo", data.getMetodo());
                     break;
                 case "MD5":
