@@ -8,7 +8,7 @@ public class DatoNormal implements Serializable{
     
     private String textoNormal;
 
-    @Schema(description = "Metodo de cifrado ejm: BASE64, MD5, AES. ETC..", required = true)
+    @Schema(description = "Metodo de cifrado ejm: BASE64, MD5, AES, 3DES, IDEA, ETC..", required = true)
     private String metodo;
 
     public String getTextoNormal() {

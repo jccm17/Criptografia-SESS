@@ -8,6 +8,10 @@ import java.nio.charset.*;
 import javax.crypto.spec.*;
 import java.security.spec.*;
 
+/**
+ *
+ * @author Jccm.17
+ */
 public class EncriptadorMD5 {
 
     private final char[] secretKey;

@@ -2,6 +2,10 @@ package com.example.restapi.springbootapp.utils;
 
 import java.io.*;
 
+/**
+ *
+ * @author Jccm.17
+ */
 public class EncriptadorRC5 {
 
     public void encrypt() throws Exception {

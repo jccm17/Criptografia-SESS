@@ -6,14 +6,14 @@ import java.io.InputStreamReader;
 public class KeyExp {
     String s[] = new String[26];
 
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
         KeyExp k = new KeyExp();
         k.compute();
         for (int i = 0; i < 26; i++) {
             System.out.println(k.s[i]);
         }
 
-    }
+    }*/
 
     public String[] compute() throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
