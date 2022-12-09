@@ -5,8 +5,10 @@ import com.example.restapi.springbootapp.dto.DatoNormal;
 import com.example.restapi.springbootapp.dto.Datos;
 import com.example.restapi.springbootapp.utils.DesedeCrypter;
 import com.example.restapi.springbootapp.utils.EncriptadorAES;
+import com.example.restapi.springbootapp.utils.EncriptadorBase64;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
 import com.example.restapi.springbootapp.utils.EncriptadorMD5;
+import com.example.restapi.springbootapp.utils.EncriptadorRC6;
 import com.example.restapi.springbootapp.utils.Uploads;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,11 +34,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,10 +53,12 @@ public class CifradoController {
     private final Path root = Paths.get("uploads");
     final String claveEncriptacion = "cifrado128AES25!";
     Uploads f = new Uploads();
+    EncriptadorBase64 base_64 = new EncriptadorBase64();
     EncriptadorAES aes = new EncriptadorAES();
     EncriptadorMD5 md5 = new EncriptadorMD5();
     DesedeCrypter des3 = new DesedeCrypter();
     EncriptadorIDEA idea = new EncriptadorIDEA(claveEncriptacion);
+    EncriptadorRC6 rc6 = new EncriptadorRC6();
 
     @Operation(summary = "Retorna Texto en cifrado")
     @ApiResponses(value = {
@@ -89,6 +89,12 @@ public class CifradoController {
                     break;
                 case "IDEA":
                     response.put("textoCifrado", idea.encrypt(data.getTextoNormal()));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "RC6":
+                    // byte[] text_byte = Files.readAllBytes(data.getTextoNormal());
+                    // byte[] key_byte = Files.readAllBytes(key_file);
+                    // response.put("textoCifrado", rc6.encrypt(data.getTextoNormal()));
                     response.put("metodo", data.getMetodo());
                     break;
                 default:
@@ -165,9 +171,15 @@ public class CifradoController {
             logger.info("file bytes: " + fileContent);
             switch (data.getMetodo()) {
                 case "BASE64":
+                    String nameFileoutB = "encrypt_base64_" + data.getArchivo().getOriginalFilename();
                     response.put("archivoCifrado", Base64.getEncoder().encodeToString(fileContent));
                     response.put("metodo", data.getMetodo());
-                    encodeFile(path, nameFile);
+                    String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                            .path("/downloadFile/")
+                            .path(nameFileoutB)
+                            .toUriString();
+                    base_64.encodeFile(path, "uploads/" + nameFileoutB);
+                    response.put("fileUrl", fileDownloadUri);
                     break;
                 case "AES":
                     response.put("metodo", data.getMetodo());
@@ -212,9 +224,15 @@ public class CifradoController {
             File file = new File(path);
             switch (data.getMetodo()) {
                 case "BASE64":
+                    String nameFileoutB = "decrypt_base64_" + data.getArchivo().getOriginalFilename();
                     response.put("archivoCifrado", null);
                     response.put("metodo", data.getMetodo());
-                    // decodeFile(data.getTextoCifrado(), data.getTextoCifrado());
+                    String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                            .path("/downloadFile/")
+                            .path(nameFileoutB)
+                            .toUriString();
+                    base_64.decodeFile(path, "uploads/" + nameFileoutB);
+                    response.put("fileUrl", fileDownloadUri);
                     break;
                 case "AES":
                     response.put("metodo", data.getMetodo());
@@ -238,21 +256,4 @@ public class CifradoController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    private static void encodeFile(String inputFile, String outputFile)
-            throws IOException {
-        Path inPath = Paths.get(inputFile);
-        Path outPath = Paths.get(outputFile);
-        try (OutputStream out = Base64.getEncoder().wrap(Files.newOutputStream(outPath))) {
-            Files.copy(inPath, out);
-        }
-    }
-
-    private static void decodeFile(String encodedfilecontent, String decodedfile)
-            throws IOException {
-        Path inPath = Paths.get(encodedfilecontent);
-        Path outPath = Paths.get(decodedfile);
-        try (InputStream in = Base64.getDecoder().wrap(Files.newInputStream(inPath))) {
-            Files.copy(in, outPath);
-        }
-    }
 }
