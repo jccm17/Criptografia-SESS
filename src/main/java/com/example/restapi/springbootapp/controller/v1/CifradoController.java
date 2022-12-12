@@ -189,6 +189,7 @@ public class CifradoController {
         header.add("Pragma", "no-cache");
         header.add("Expires", "0");
         //f.eliminarTodo("uploads");
+        f.eliminar("uploads/" + nameFileOut);
         String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
         Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
         path = path + nameFile;
@@ -242,6 +243,7 @@ public class CifradoController {
         header.add("Expires", "0");
         String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
         //f.eliminarTodo("uploads");
+        f.eliminar("uploads/" + nameFileOut);
         Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
         path = path + nameFile;
         switch (data.getMetodo()) {
