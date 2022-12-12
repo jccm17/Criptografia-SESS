@@ -12,10 +12,12 @@ public class Uploads {
     public void eliminar(String file) {
 
         File fichero = new File(file);
-        if (fichero.delete())
-            System.out.println("file delete success");
-        else
-            System.out.println("fail delete file");
+        if (fichero.exists()) {
+            if (fichero.delete())
+                System.out.println("file delete success");
+            else
+                System.out.println("fail delete file");
+        }
     }
 
     public void eliminarTodo(String folder) {
