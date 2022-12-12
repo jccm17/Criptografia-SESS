@@ -188,7 +188,7 @@ public class CifradoController {
         header.add("Cache-Control", "no-cache, no-store, must-revalidate");
         header.add("Pragma", "no-cache");
         header.add("Expires", "0");
-        f.eliminarTodo("uploads");
+        //f.eliminarTodo("uploads");
         String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
         Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
         path = path + nameFile;
@@ -217,6 +217,7 @@ public class CifradoController {
         File file = new File("uploads/" + nameFileOut);
         Path pathout = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
+        //f.eliminar("uploads/" + nameFileOut);
         return ResponseEntity.ok()
                 .headers(header)
                 .contentLength(file.length())
@@ -240,7 +241,7 @@ public class CifradoController {
         header.add("Pragma", "no-cache");
         header.add("Expires", "0");
         String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
-        f.eliminarTodo("uploads");
+        //f.eliminarTodo("uploads");
         Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
         path = path + nameFile;
         switch (data.getMetodo()) {
@@ -264,28 +265,7 @@ public class CifradoController {
         File file = new File("uploads/" + nameFileOut);
         Path pathout = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
-        return ResponseEntity.ok()
-                .headers(header)
-                .contentLength(file.length())
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .body(resource);
-    }
-
-    @RequestMapping(path = "download", method = RequestMethod.GET)
-    public ResponseEntity<?> download(@RequestParam("image") String image) throws IOException {
-        File file = new File("uploads/" + File.separator + "test" + ".txt");
-        Map<String, Object> response = new HashMap<>();
-        HttpHeaders header = new HttpHeaders();
-        header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=img.jpg");
-        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        header.add("Pragma", "no-cache");
-        header.add("Expires", "0");
-
-        Path path = Paths.get(file.getAbsolutePath());
-        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-        response.put("file", resource);
-        response.put("metodo", "BASE64");
-
+        //f.eliminar("uploads/" + nameFileOut);
         return ResponseEntity.ok()
                 .headers(header)
                 .contentLength(file.length())
