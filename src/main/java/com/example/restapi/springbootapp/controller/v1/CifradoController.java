@@ -17,11 +17,19 @@ import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.servers.Server;
 
 import org.apache.logging.log4j.Logger;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,6 +42,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,10 +52,18 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import javax.sound.sampled.Line;
 import javax.validation.Valid;
 
+/**
+ *
+ * @author Jccm.17
+ */
 @OpenAPIDefinition(servers = { @Server(url = "https://encriptacion-sess.herokuapp.com/"),
-        @Server(url = "http://localhost:9090") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "https://github.com/bchen04/springboot-swagger-rest-api/blob/master/LICENSE"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
+        @Server(url = "http://localhost:9090") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
 @RequestMapping("v1/")
 public class CifradoController {
@@ -158,102 +177,120 @@ public class CifradoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operacion exitosa", content = @Content(schema = @Schema(type = "object"))) })
     @PostMapping(value = "encriptar/archivo", consumes = "multipart/form-data")
-    public ResponseEntity<?> encriptarArchivo(@ModelAttribute ArchivoNormal data) {
-        Map<String, Object> response = new HashMap<>();
-        String path = "";
-        String text = "";
-        try {
-            String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
-            Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
-            path = "uploads/" + nameFile;
-            File file = new File(path);
-            byte[] fileContent = Files.readAllBytes(file.toPath());
-            logger.info("file bytes: " + fileContent);
-            switch (data.getMetodo()) {
-                case "BASE64":
-                    String nameFileoutB = "encrypt_base64_" + data.getArchivo().getOriginalFilename();
-                    response.put("archivoCifrado", Base64.getEncoder().encodeToString(fileContent));
-                    response.put("metodo", data.getMetodo());
-                    String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                            .path("/downloadFile/")
-                            .path(nameFileoutB)
-                            .toUriString();
-                    base_64.encodeFile(path, "uploads/" + nameFileoutB);
-                    response.put("fileUrl", fileDownloadUri);
-                    break;
-                case "AES":
-                    response.put("metodo", data.getMetodo());
-                    break;
-                case "MD5":
-                    response.put("metodo", data.getMetodo());
-                    break;
-                case "3DES":
-                    String nameFileout = UUID.randomUUID() + "_DES_3_encrypt_"
-                            + data.getArchivo().getOriginalFilename();
-                    File fileout = new File(path + nameFileout);
-                    response.put("archivoCifrado", des3.encryptFile(file, fileout));
-                    response.put("metodo", data.getMetodo());
-                    break;
-                default:
-                    response.put("archivoCifrado", text);
-                    response.put("metodo", "No definido, desconocido");
-                    break;
-            }
-
-            f.eliminar("uploads/" + nameFile);
-            response.put("archivoName", nameFile);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<?> encriptarArchivo(@ModelAttribute ArchivoNormal data) throws IOException {
+        String path = "uploads/";
+        String ext = FilenameUtils.getExtension(data.getArchivo().getOriginalFilename()); // returns "txt"
+        logger.info("ext: " + ext);
+        String nameFileOut = "file_encrypt_" + data.getMetodo() + "." + ext;
+        HttpHeaders header = new HttpHeaders();
+        header.add(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=" + nameFileOut);
+        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        header.add("Pragma", "no-cache");
+        header.add("Expires", "0");
+        f.eliminarTodo("uploads");
+        String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
+        Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
+        path = path + nameFile;
+        switch (data.getMetodo()) {
+            case "BASE64":
+                base_64.encodeFile(path, "uploads/" + nameFileOut);
+                break;
+            case "AES":
+                // response.put("metodo", data.getMetodo());
+                break;
+            case "MD5":
+                // response.put("metodo", data.getMetodo());
+                break;
+            case "3DES":
+                String nameFileout = UUID.randomUUID() + "_DES_3_encrypt_"
+                        + data.getArchivo().getOriginalFilename();
+                File fileout = new File("uploads/" + nameFileout);
+                File filein = new File(path);
+                des3.encryptFile(filein, fileout);
+                break;
+            default:
+                break;
         }
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        f.eliminar("uploads/" + nameFile);
+        logger.info("File Out: " + nameFileOut);
+        File file = new File("uploads/" + nameFileOut);
+        Path pathout = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
+        return ResponseEntity.ok()
+                .headers(header)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
     }
 
     @Operation(summary = "Retorna Archivo descifrado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operacion exitosa", content = @Content(schema = @Schema(type = "object"))) })
     @PostMapping(value = "desencriptar/archivo", consumes = "multipart/form-data")
-    public ResponseEntity<?> desencriptarArchivo(@ModelAttribute ArchivoNormal data) {
-        Map<String, Object> response = new HashMap<>();
-        String path = "";
-        String text = "";
-        logger.info("file: " + data.getArchivo().getOriginalFilename());
-        try {
-            String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
-            Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
-            path = "uploads/" + nameFile;
-            File file = new File(path);
-            switch (data.getMetodo()) {
-                case "BASE64":
-                    String nameFileoutB = "decrypt_base64_" + data.getArchivo().getOriginalFilename();
-                    response.put("archivoCifrado", null);
-                    response.put("metodo", data.getMetodo());
-                    String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                            .path("/downloadFile/")
-                            .path(nameFileoutB)
-                            .toUriString();
-                    base_64.decodeFile(path, "uploads/" + nameFileoutB);
-                    response.put("fileUrl", fileDownloadUri);
-                    break;
-                case "AES":
-                    response.put("metodo", data.getMetodo());
-                    break;
-                case "3DES":
-                    String nameFileout = UUID.randomUUID() + "_DES_3_decrypt_"
-                            + data.getArchivo().getOriginalFilename();
-                    File fileout = new File(path + nameFileout);
-                    response.put("archivoCifrado", des3.decryptFile(file, fileout));
-                    response.put("metodo", data.getMetodo());
-                    break;
-                default:
-                    response.put("archivoCifrado", text);
-                    response.put("metodo", "No definido, desconocido");
-                    break;
-            }
-            f.eliminar("uploads/" + nameFile);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<?> desencriptarArchivo(@ModelAttribute ArchivoNormal data) throws IOException {
+        String path = "uploads/";
+        String ext = FilenameUtils.getExtension(data.getArchivo().getOriginalFilename()); // returns "txt"
+        logger.info("ext: " + ext);
+        String nameFileOut = "file_decrypt_" + data.getMetodo() + "." + ext;
+        HttpHeaders header = new HttpHeaders();
+        header.add(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=" + nameFileOut);
+        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        header.add("Pragma", "no-cache");
+        header.add("Expires", "0");
+        String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
+        f.eliminarTodo("uploads");
+        Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
+        path = path + nameFile;
+        switch (data.getMetodo()) {
+            case "BASE64":
+                base_64.decodeFile(path, "uploads/" + nameFileOut);
+                break;
+            case "AES":
+                break;
+            case "3DES":
+                String nameFileout = UUID.randomUUID() + "_DES_3_decrypt_"
+                        + data.getArchivo().getOriginalFilename();
+                File fileout = new File("uploads/" + nameFileout);
+                File filein = new File(path);
+                des3.decryptFile(filein, fileout);
+                break;
+            default:
+                break;
         }
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        f.eliminar("uploads/" + nameFile);
+        logger.info("File Out: " + nameFileOut);
+        File file = new File("uploads/" + nameFileOut);
+        Path pathout = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
+        return ResponseEntity.ok()
+                .headers(header)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
+    }
+
+    @RequestMapping(path = "download", method = RequestMethod.GET)
+    public ResponseEntity<?> download(@RequestParam("image") String image) throws IOException {
+        File file = new File("uploads/" + File.separator + "test" + ".txt");
+        Map<String, Object> response = new HashMap<>();
+        HttpHeaders header = new HttpHeaders();
+        header.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=img.jpg");
+        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        header.add("Pragma", "no-cache");
+        header.add("Expires", "0");
+
+        Path path = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        response.put("file", resource);
+        response.put("metodo", "BASE64");
+
+        return ResponseEntity.ok()
+                .headers(header)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
     }
 
 }

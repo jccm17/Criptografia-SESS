@@ -3,7 +3,10 @@ package com.example.restapi.springbootapp.dto;
 import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+/**
+ *
+ * @author Jccm.17
+ */
 public class DatoNormal implements Serializable{
     
     private String textoNormal;

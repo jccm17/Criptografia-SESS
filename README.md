@@ -4,7 +4,7 @@ While searching through GitHub for some boilerplate code on how to setup a Sprin
 
 ## What You Need
 
-* Java 14
+* Java 11
 * Maven 3.6.0+
 
 ## Build and Run the Sample
@@ -14,4 +14,4 @@ You can import the code straight into your preferred IDE or run the sample using
 ```zsh
 $  mvn spring-boot:run
 ```
-After the application runs, navigate to `http://localhost:7001/swagger-ui/index.html?configUrl=/api-docs/swagger-config` in your web browser to access the Swagger UI portal.
+After the application runs, navigate to `http://localhost:9090/swagger-ui/index.html?configUrl=/api-docs/swagger-config` in your web browser to access the Swagger UI portal.

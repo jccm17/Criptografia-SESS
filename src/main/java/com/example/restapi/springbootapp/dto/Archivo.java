@@ -5,7 +5,10 @@ import java.io.Serializable;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+/**
+ *
+ * @author Jccm.17
+ */
 public class Archivo implements Serializable{
  
     @Schema(description = "Metodo de cifrado ejm: BASE64, MD5, AES. ETC..", required = true)

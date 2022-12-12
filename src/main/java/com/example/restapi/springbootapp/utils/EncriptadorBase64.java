@@ -7,7 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
-
+/**
+ *
+ * @author Jccm.17
+ */
 public class EncriptadorBase64 {
 
     public void encodeFile(String inputFile, String outputFile)
