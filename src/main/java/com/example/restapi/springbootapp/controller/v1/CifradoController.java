@@ -171,13 +171,8 @@ public class CifradoController {
         String ext = FilenameUtils.getExtension(data.getArchivo().getOriginalFilename()); // returns "txt"
         logger.info("ext: " + ext);
         String nameFileOut = "file_encrypt_" + data.getMetodo() + "." + ext;
-        HttpHeaders header = new HttpHeaders();
-        header.add(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=" + nameFileOut);
-        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        header.add("Pragma", "no-cache");
-        header.add("Expires", "0");
-        //f.eliminarTodo("uploads");
+
+        // f.eliminarTodo("uploads");
         f.eliminar("uploads/" + nameFileOut);
         String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
         Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
@@ -204,10 +199,16 @@ public class CifradoController {
         }
         f.eliminar("uploads/" + nameFile);
         logger.info("File Out: " + nameFileOut);
+        HttpHeaders header = new HttpHeaders();
+        header.add(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=" + nameFileOut);
+        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        header.add("Pragma", "no-cache");
+        header.add("Expires", "0");
         File file = new File("uploads/" + nameFileOut);
         Path pathout = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
-        //f.eliminar("uploads/" + nameFileOut);
+        // f.eliminar("uploads/" + nameFileOut);
         return ResponseEntity.ok()
                 .headers(header)
                 .contentLength(file.length())
@@ -224,14 +225,9 @@ public class CifradoController {
         String ext = FilenameUtils.getExtension(data.getArchivo().getOriginalFilename()); // returns "txt"
         logger.info("ext: " + ext);
         String nameFileOut = "file_decrypt_" + data.getMetodo() + "." + ext;
-        HttpHeaders header = new HttpHeaders();
-        header.add(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=" + nameFileOut);
-        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        header.add("Pragma", "no-cache");
-        header.add("Expires", "0");
+
         String nameFile = UUID.randomUUID() + data.getArchivo().getOriginalFilename();
-        //f.eliminarTodo("uploads");
+        // f.eliminarTodo("uploads");
         f.eliminar("uploads/" + nameFileOut);
         Files.copy(data.getArchivo().getInputStream(), this.root.resolve(nameFile));
         path = path + nameFile;
@@ -253,10 +249,16 @@ public class CifradoController {
         }
         f.eliminar("uploads/" + nameFile);
         logger.info("File Out: " + nameFileOut);
+        HttpHeaders header = new HttpHeaders();
+        header.add(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=" + nameFileOut);
+        header.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        header.add("Pragma", "no-cache");
+        header.add("Expires", "0");
         File file = new File("uploads/" + nameFileOut);
         Path pathout = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
-        //f.eliminar("uploads/" + nameFileOut);
+        // f.eliminar("uploads/" + nameFileOut);
         return ResponseEntity.ok()
                 .headers(header)
                 .contentLength(file.length())
