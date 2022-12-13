@@ -1,5 +1,11 @@
 package com.example.restapi.springbootapp.utils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -12,11 +18,15 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  *
  * @author Jccm.17
  */
 public class EncriptadorAES {
+    Logger logger = LogManager.getLogger(EncriptadorAES.class);
 
     /**
      * Crea la clave de encriptacion usada internamente
@@ -67,6 +77,37 @@ public class EncriptadorAES {
         return encriptado;
     }
 
+    public void encriptarArchivo(File infile, File outfile, String claveSecreta)
+            throws FileNotFoundException {
+
+        try {
+            FileInputStream fis = new FileInputStream(infile);
+            FileOutputStream out = new FileOutputStream(outfile);
+            SecretKeySpec secretKey = this.crearClave(claveSecreta);
+
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            BufferedInputStream in = new BufferedInputStream(fis);
+            BufferedOutputStream bos = new BufferedOutputStream(out);
+            byte[] ibuf = new byte[1024];
+            int len;
+            while ((len = in.read(ibuf)) != -1) {
+                byte[] obuf = cipher.update(ibuf, 0, len);
+                if (obuf != null)
+                    bos.write(obuf);
+            }
+            byte[] obuf = cipher.doFinal();
+            if (obuf != null)
+                bos.write(obuf);
+
+            in.close();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Catch: " + e.getMessage());
+        }
+    }
+
     /**
      * Desencripta la cadena de texto indicada usando la clave de encriptacion
      * 
@@ -93,5 +134,35 @@ public class EncriptadorAES {
         String datos = new String(datosDesencriptados);
 
         return datos;
+    }
+
+    public void desencriptarArchivo(File inFile, File outFile, String claveSecreta)
+            throws FileNotFoundException {
+        FileInputStream in = new FileInputStream(inFile);
+        FileOutputStream out = new FileOutputStream(outFile);
+        byte[] ibuf = new byte[1024];
+        int len;
+        try {
+            SecretKeySpec secretKey = this.crearClave(claveSecreta);
+
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
+            while ((len = in.read(ibuf)) != -1) {
+                byte[] obuf = cipher.update(ibuf, 0, len);
+                if (obuf != null)
+                    out.write(obuf);
+            }
+            byte[] obuf = cipher.doFinal();
+            if (obuf != null)
+                out.write(obuf);
+
+            in.close();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Catch: " + e.getMessage());
+        }
+
     }
 }

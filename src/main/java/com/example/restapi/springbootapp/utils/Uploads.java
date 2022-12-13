@@ -10,7 +10,7 @@ import java.util.Objects;
 public class Uploads {
 
     public void eliminar(String file) {
-
+        System.out.println("file to delete: " + file);
         File fichero = new File(file);
         if (fichero.exists()) {
             if (fichero.delete())

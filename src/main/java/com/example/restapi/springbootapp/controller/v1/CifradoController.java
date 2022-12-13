@@ -7,9 +7,12 @@ import com.example.restapi.springbootapp.utils.DesedeCrypter;
 import com.example.restapi.springbootapp.utils.EncriptadorAES;
 import com.example.restapi.springbootapp.utils.EncriptadorBase64;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
+import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles;
 import com.example.restapi.springbootapp.utils.EncriptadorMD5;
 import com.example.restapi.springbootapp.utils.EncriptadorRC6;
 import com.example.restapi.springbootapp.utils.Uploads;
+import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles.Mode;
+
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -66,6 +69,7 @@ public class CifradoController {
     EncriptadorMD5 md5 = new EncriptadorMD5();
     DesedeCrypter des3 = new DesedeCrypter();
     EncriptadorIDEA idea = new EncriptadorIDEA(claveEncriptacion);
+    EncriptadorIDEAFiles ideaFile = new EncriptadorIDEAFiles();
     EncriptadorRC6 rc6 = new EncriptadorRC6();
 
     @Operation(summary = "Retorna Texto en cifrado")
@@ -182,15 +186,15 @@ public class CifradoController {
                 base_64.encodeFile(path, "uploads/" + nameFileOut);
                 break;
             case "AES":
-                // response.put("metodo", data.getMetodo());
+                File fileoutAES = new File("uploads/" + nameFileOut);
+                File fileinAES = new File(path);
+                aes.encriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
                 break;
-            case "MD5":
-                // response.put("metodo", data.getMetodo());
+            case "IDEA":
+                ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, true, Mode.ECB);
                 break;
             case "3DES":
-                String nameFileout = UUID.randomUUID() + "_DES_3_encrypt_"
-                        + data.getArchivo().getOriginalFilename();
-                File fileout = new File("uploads/" + nameFileout);
+                File fileout = new File("uploads/" + nameFileOut);
                 File filein = new File(path);
                 des3.encryptFile(filein, fileout);
                 break;
@@ -236,11 +240,15 @@ public class CifradoController {
                 base_64.decodeFile(path, "uploads/" + nameFileOut);
                 break;
             case "AES":
+                File fileoutAES = new File("uploads/" + nameFileOut);
+                File fileinAES = new File(path);
+                aes.desencriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
+                break;
+            case "IDEA":
+                ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, false, Mode.ECB);
                 break;
             case "3DES":
-                String nameFileout = UUID.randomUUID() + "_DES_3_decrypt_"
-                        + data.getArchivo().getOriginalFilename();
-                File fileout = new File("uploads/" + nameFileout);
+                File fileout = new File("uploads/" + nameFileOut);
                 File filein = new File(path);
                 des3.decryptFile(filein, fileout);
                 break;
@@ -258,7 +266,6 @@ public class CifradoController {
         File file = new File("uploads/" + nameFileOut);
         Path pathout = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(pathout));
-        // f.eliminar("uploads/" + nameFileOut);
         return ResponseEntity.ok()
                 .headers(header)
                 .contentLength(file.length())
