@@ -3,6 +3,7 @@ package com.example.restapi.springbootapp.controller.v1;
 import com.example.restapi.springbootapp.dto.ArchivoNormal;
 import com.example.restapi.springbootapp.dto.DatoNormal;
 import com.example.restapi.springbootapp.dto.Datos;
+import com.example.restapi.springbootapp.utils.Blowfish;
 import com.example.restapi.springbootapp.utils.DesedeCrypter;
 import com.example.restapi.springbootapp.utils.EncriptadorAES;
 import com.example.restapi.springbootapp.utils.EncriptadorBase64;
@@ -27,6 +28,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,6 +56,7 @@ import javax.validation.Valid;
  *
  * @author Jccm.17
  */
+@CrossOrigin(origins = "*", maxAge = 3600)
 @OpenAPIDefinition(servers = { @Server(url = "https://encriptacion-sess.herokuapp.com/"),
         @Server(url = "http://localhost:9090") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
@@ -70,7 +73,7 @@ public class CifradoController {
     DesedeCrypter des3 = new DesedeCrypter();
     EncriptadorIDEA idea = new EncriptadorIDEA(claveEncriptacion);
     EncriptadorIDEAFiles ideaFile = new EncriptadorIDEAFiles();
-    EncriptadorRC6 rc6 = new EncriptadorRC6();
+    Blowfish blowFish = new Blowfish();
 
     @Operation(summary = "Retorna Texto en cifrado")
     @ApiResponses(value = {
@@ -170,7 +173,7 @@ public class CifradoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operacion exitosa", content = @Content(schema = @Schema(type = "object"))) })
     @PostMapping(value = "encriptar/archivo", consumes = "multipart/form-data")
-    public ResponseEntity<?> encriptarArchivo(@ModelAttribute ArchivoNormal data) throws IOException {
+    public ResponseEntity<?> encriptarArchivo(@ModelAttribute ArchivoNormal data) throws Exception {
         String path = "uploads/";
         String ext = FilenameUtils.getExtension(data.getArchivo().getOriginalFilename()); // returns "txt"
         logger.info("ext: " + ext);
@@ -198,6 +201,13 @@ public class CifradoController {
                 File filein = new File(path);
                 des3.encryptFile(filein, fileout);
                 break;
+            case "BLOWFISH":
+                File fileinBlow = new File(path);
+                File fileoutBlow = new File("uploads/" + nameFileOut);
+                byte[] filein_byte = Files.readAllBytes(fileinBlow.toPath());
+                byte[] fileout_byte = Files.readAllBytes(fileoutBlow.toPath());
+                blowFish.encrypt(filein_byte, fileout_byte);
+                break;
             default:
                 break;
         }
@@ -224,7 +234,7 @@ public class CifradoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operacion exitosa", content = @Content(schema = @Schema(type = "object"))) })
     @PostMapping(value = "desencriptar/archivo", consumes = "multipart/form-data")
-    public ResponseEntity<?> desencriptarArchivo(@ModelAttribute ArchivoNormal data) throws IOException {
+    public ResponseEntity<?> desencriptarArchivo(@ModelAttribute ArchivoNormal data) throws Exception {
         String path = "uploads/";
         String ext = FilenameUtils.getExtension(data.getArchivo().getOriginalFilename()); // returns "txt"
         logger.info("ext: " + ext);
@@ -251,6 +261,13 @@ public class CifradoController {
                 File fileout = new File("uploads/" + nameFileOut);
                 File filein = new File(path);
                 des3.decryptFile(filein, fileout);
+                break;
+            case "BLOWFISH":
+                File fileinBlow = new File(path);
+                File fileoutBlow = new File("uploads/" + nameFileOut);
+                byte[] filein_byte = Files.readAllBytes(fileinBlow.toPath());
+                byte[] fileout_byte = Files.readAllBytes(fileoutBlow.toPath());
+                blowFish.encrypt(filein_byte, fileout_byte);
                 break;
             default:
                 break;
