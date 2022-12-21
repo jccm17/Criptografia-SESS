@@ -78,7 +78,7 @@ public class CifradoController {
     @Operation(summary = "Retorna Texto en cifrado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operacion exitosa", content = @Content(schema = @Schema(type = "object"))) })
-    @PostMapping(value = "encriptar", produces = { "application/json" })
+    @PostMapping(value = "encriptar", produces = { "application/json;charset=UTF-8" })
     public ResponseEntity<?> encriptar(@Valid @RequestBody DatoNormal data) {
         Map<String, Object> response = new HashMap<>();
         String text = "";
@@ -127,7 +127,7 @@ public class CifradoController {
     @Operation(summary = "Retorna Texto descifrado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operacion exitosa", content = @Content(schema = @Schema(type = "object"))) })
-    @PostMapping(value = "desencriptar", produces = { "application/json" })
+    @PostMapping(value = "desencriptar", produces = { "application/json;charset=UTF-8" })
     public ResponseEntity<?> desencriptar(@Valid @RequestBody Datos data) {
         Map<String, Object> response = new HashMap<>();
         String text = "";
@@ -189,7 +189,7 @@ public class CifradoController {
                 base_64.encodeFile(path, "uploads/" + nameFileOut);
                 break;
             case "AES":
-                File fileoutAES = new File("uploads/" + nameFileOut);
+                //File fileoutAES = new File("uploads/" + nameFileOut);
                 File fileinAES = new File(path);
                 //aes.encriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
                 aesFile.encryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion);
@@ -251,7 +251,7 @@ public class CifradoController {
                 base_64.decodeFile(path, "uploads/" + nameFileOut);
                 break;
             case "AES":
-                File fileoutAES = new File("uploads/" + nameFileOut);
+                //File fileoutAES = new File("uploads/" + nameFileOut);
                 File fileinAES = new File(path);
                 //aes.desencriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
                 aesFile.decryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion);

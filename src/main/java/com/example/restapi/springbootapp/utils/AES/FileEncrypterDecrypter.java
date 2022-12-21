@@ -81,7 +81,6 @@ public class FileEncrypterDecrypter {
     public void encryptFile(File fromFile, String toFile, String password) throws Exception {
 
         // read a normal txt file
-        //byte[] fileContent = Files.readAllBytes(Paths.get(ClassLoader.getSystemResource(fromFile).toURI()));
         byte[] fileContent = Files.readAllBytes(fromFile.toPath());
 
         // encrypt with a password
@@ -97,7 +96,6 @@ public class FileEncrypterDecrypter {
     public void decryptFile(File fromEncryptedFile, String toFile, String password) throws Exception {
 
         // read a file
-        //byte[] fileContent = Files.readAllBytes(Paths.get(fromEncryptedFile));
         byte[] fileContent = Files.readAllBytes(fromEncryptedFile.toPath());
 
         byte[] decryptedFile = decrypt(fileContent, password);

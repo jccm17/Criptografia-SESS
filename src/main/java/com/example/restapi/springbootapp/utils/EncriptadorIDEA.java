@@ -2,23 +2,24 @@ package com.example.restapi.springbootapp.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  *
  * @author Jccm.17
  */
-public class EncriptadorIDEA extends Encryption{
+public class EncriptadorIDEA extends Encryption {
 
     /**
-	 * Constructor, string key.
-	 * 
-	 * @param keyStr
-	 */
-	public EncriptadorIDEA(String keyStr) {
-		this.name = EncriptadorIDEA.class.getSimpleName();
-		keySize = 16;
-		blockSize = 8;
-		setKey(keyStr);
-	}
+     * Constructor, string key.
+     * 
+     * @param keyStr
+     */
+    public EncriptadorIDEA(String keyStr) {
+        this.name = EncriptadorIDEA.class.getSimpleName();
+        keySize = 16;
+        blockSize = 8;
+        setKey(keyStr);
+    }
 
     private final String charToAdd = " ";
 
@@ -71,7 +72,6 @@ public class EncriptadorIDEA extends Encryption{
             }
         }
 
-        // return result.toString().substring(0, result.length()-charactersAdded);
         return result.toString();
     }
 
@@ -108,8 +108,7 @@ public class EncriptadorIDEA extends Encryption{
                 result.append(new String(encryptedTextByte));
             }
         }
-
-        // return result.toString().substring(0, result.length()-charactersAdded);
+        System.out.println(result);
         return result.toString();
     }
 
