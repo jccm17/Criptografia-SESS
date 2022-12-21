@@ -10,8 +10,8 @@ import com.example.restapi.springbootapp.utils.EncriptadorBase64;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles;
 import com.example.restapi.springbootapp.utils.EncriptadorMD5;
-import com.example.restapi.springbootapp.utils.EncriptadorRC6;
 import com.example.restapi.springbootapp.utils.Uploads;
+import com.example.restapi.springbootapp.utils.AES.FileEncrypterDecrypter;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles.Mode;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -41,7 +41,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,6 +68,7 @@ public class CifradoController {
     Uploads f = new Uploads();
     EncriptadorBase64 base_64 = new EncriptadorBase64();
     EncriptadorAES aes = new EncriptadorAES();
+    FileEncrypterDecrypter aesFile = new FileEncrypterDecrypter();
     EncriptadorMD5 md5 = new EncriptadorMD5();
     DesedeCrypter des3 = new DesedeCrypter();
     EncriptadorIDEA idea = new EncriptadorIDEA(claveEncriptacion);
@@ -191,7 +191,8 @@ public class CifradoController {
             case "AES":
                 File fileoutAES = new File("uploads/" + nameFileOut);
                 File fileinAES = new File(path);
-                aes.encriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
+                //aes.encriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
+                aesFile.encryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion);
                 break;
             case "IDEA":
                 ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, true, Mode.ECB);
@@ -252,7 +253,8 @@ public class CifradoController {
             case "AES":
                 File fileoutAES = new File("uploads/" + nameFileOut);
                 File fileinAES = new File(path);
-                aes.desencriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
+                //aes.desencriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
+                aesFile.decryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion);
                 break;
             case "IDEA":
                 ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, false, Mode.ECB);
