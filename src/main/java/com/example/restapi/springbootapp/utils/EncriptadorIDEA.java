@@ -71,7 +71,7 @@ public class EncriptadorIDEA extends Encryption {
                 result.append(new String(decryptedTextByte));
             }
         }
-
+        System.out.println(result);
         return result.toString();
     }
 
