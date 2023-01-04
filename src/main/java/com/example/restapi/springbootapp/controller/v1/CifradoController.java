@@ -90,8 +90,20 @@ public class CifradoController {
                     response.put("textoCifrado", Base64.getEncoder().encodeToString(data.getTextoNormal().getBytes()));
                     response.put("metodo", data.getMetodo());
                     break;
-                case "AES":
-                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), claveEncriptacion));
+                case "AES-1":
+                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), claveEncriptacion, "SHA-1"));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "AES-256":
+                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), claveEncriptacion, "SHA-256"));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "AES-384":
+                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), claveEncriptacion, "SHA-384"));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "AES-512":
+                    response.put("textoCifrado", aes.encriptar(data.getTextoNormal(), claveEncriptacion, "SHA-512"));
                     response.put("metodo", data.getMetodo());
                     break;
                 case "MD5":
@@ -104,6 +116,10 @@ public class CifradoController {
                     break;
                 case "IDEA":
                     response.put("textoCifrado", idea.encrypt(data.getTextoNormal()));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "BLOWFISH":
+                    response.put("textoCifrado", blowFish.enc(data.getTextoNormal()));
                     response.put("metodo", data.getMetodo());
                     break;
                 case "RC6":
@@ -141,8 +157,24 @@ public class CifradoController {
                     response.put("textoDescifrado", decodedUrl);
                     response.put("metodo", data.getMetodo());
                     break;
-                case "AES":
-                    response.put("textoDescifrado", aes.desencriptar(data.getTextoCifrado(), claveEncriptacion));
+                case "AES-1":
+                    response.put("textoDescifrado",
+                            aes.desencriptar(data.getTextoCifrado(), claveEncriptacion, "SHA-1"));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "AES-256":
+                    response.put("textoDescifrado",
+                            aes.desencriptar(data.getTextoCifrado(), claveEncriptacion, "SHA-256"));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "AES-384":
+                    response.put("textoDescifrado",
+                            aes.desencriptar(data.getTextoCifrado(), claveEncriptacion, "SHA-384"));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "AES-512":
+                    response.put("textoDescifrado",
+                            aes.desencriptar(data.getTextoCifrado(), claveEncriptacion, "SHA-512"));
                     response.put("metodo", data.getMetodo());
                     break;
                 case "MD5":
@@ -155,6 +187,10 @@ public class CifradoController {
                     break;
                 case "IDEA":
                     response.put("textoDescifrado", idea.decrypt(data.getTextoCifrado()));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "BLOWFISH":
+                    response.put("textoDescifrado", blowFish.dec(data.getTextoCifrado()));
                     response.put("metodo", data.getMetodo());
                     break;
                 default:
@@ -188,11 +224,13 @@ public class CifradoController {
             case "BASE64":
                 base_64.encodeFile(path, "uploads/" + nameFileOut);
                 break;
-            case "AES":
-                //File fileoutAES = new File("uploads/" + nameFileOut);
+            case "AES-1":
                 File fileinAES = new File(path);
-                //aes.encriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
-                aesFile.encryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion);
+                aesFile.encryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion, "SHA-1");
+                break;
+            case "AES-256":
+                File fileinAES256 = new File(path);
+                aesFile.encryptFile(fileinAES256, "uploads/" + nameFileOut, claveEncriptacion, "SHA-256");
                 break;
             case "IDEA":
                 ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, true, Mode.ECB);
@@ -203,11 +241,7 @@ public class CifradoController {
                 des3.encryptFile(filein, fileout);
                 break;
             case "BLOWFISH":
-                File fileinBlow = new File(path);
-                File fileoutBlow = new File("uploads/" + nameFileOut);
-                byte[] filein_byte = Files.readAllBytes(fileinBlow.toPath());
-                byte[] fileout_byte = Files.readAllBytes(fileoutBlow.toPath());
-                blowFish.encrypt(filein_byte, fileout_byte);
+                blowFish.blowfishEncrypt(path, "uploads/" + nameFileOut);
                 break;
             default:
                 break;
@@ -250,11 +284,13 @@ public class CifradoController {
             case "BASE64":
                 base_64.decodeFile(path, "uploads/" + nameFileOut);
                 break;
-            case "AES":
-                //File fileoutAES = new File("uploads/" + nameFileOut);
+            case "AES-1":
                 File fileinAES = new File(path);
-                //aes.desencriptarArchivo(fileinAES, fileoutAES, claveEncriptacion);
-                aesFile.decryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion);
+                aesFile.decryptFile(fileinAES, "uploads/" + nameFileOut, claveEncriptacion, "SHA-1");
+                break;
+            case "AES-256":
+                File fileinAES256 = new File(path);
+                aesFile.decryptFile(fileinAES256, "uploads/" + nameFileOut, claveEncriptacion, "SHA-256");
                 break;
             case "IDEA":
                 ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, false, Mode.ECB);
@@ -265,11 +301,7 @@ public class CifradoController {
                 des3.decryptFile(filein, fileout);
                 break;
             case "BLOWFISH":
-                File fileinBlow = new File(path);
-                File fileoutBlow = new File("uploads/" + nameFileOut);
-                byte[] filein_byte = Files.readAllBytes(fileinBlow.toPath());
-                byte[] fileout_byte = Files.readAllBytes(fileoutBlow.toPath());
-                blowFish.encrypt(filein_byte, fileout_byte);
+                blowFish.blowfishDecrypt(path, "uploads/" + nameFileOut);
                 break;
             default:
                 break;

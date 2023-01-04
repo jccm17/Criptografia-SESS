@@ -36,11 +36,16 @@ public class EncriptadorAES {
      * @throws UnsupportedEncodingException
      * @throws NoSuchAlgorithmException
      */
-    private SecretKeySpec crearClave(String clave) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+    private SecretKeySpec crearClave(String clave, String algoritmo)
+            throws UnsupportedEncodingException, NoSuchAlgorithmException {
         byte[] claveEncriptacion = clave.getBytes("UTF-8");
-
-        MessageDigest sha = MessageDigest.getInstance("SHA-1");
-
+        MessageDigest sha;
+        if (algoritmo == null || algoritmo.equalsIgnoreCase("")) {
+            sha = MessageDigest.getInstance("SHA-1");
+        } else {
+            sha = MessageDigest.getInstance(algoritmo);
+            logger.info(algoritmo);
+        }
         claveEncriptacion = sha.digest(claveEncriptacion);
         claveEncriptacion = Arrays.copyOf(claveEncriptacion, 16);
 
@@ -62,10 +67,10 @@ public class EncriptadorAES {
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      */
-    public String encriptar(String datos, String claveSecreta)
+    public String encriptar(String datos, String claveSecreta, String algoritmo)
             throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException,
             IllegalBlockSizeException, BadPaddingException {
-        SecretKeySpec secretKey = this.crearClave(claveSecreta);
+        SecretKeySpec secretKey = this.crearClave(claveSecreta, algoritmo);
 
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
@@ -75,37 +80,6 @@ public class EncriptadorAES {
         String encriptado = Base64.getEncoder().encodeToString(bytesEncriptados);
 
         return encriptado;
-    }
-
-    public void encriptarArchivo(File infile, File outfile, String claveSecreta)
-            throws FileNotFoundException {
-
-        try {
-            FileInputStream fis = new FileInputStream(infile);
-            FileOutputStream out = new FileOutputStream(outfile);
-            SecretKeySpec secretKey = this.crearClave(claveSecreta);
-
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            BufferedInputStream in = new BufferedInputStream(fis);
-            BufferedOutputStream bos = new BufferedOutputStream(out);
-            byte[] ibuf = new byte[1024];
-            int len;
-            while ((len = in.read(ibuf)) != -1) {
-                byte[] obuf = cipher.update(ibuf, 0, len);
-                if (obuf != null)
-                    bos.write(obuf);
-            }
-            byte[] obuf = cipher.doFinal();
-            if (obuf != null)
-                bos.write(obuf);
-
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Catch: " + e.getMessage());
-        }
     }
 
     /**
@@ -121,10 +95,10 @@ public class EncriptadorAES {
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      */
-    public String desencriptar(String datosEncriptados, String claveSecreta)
+    public String desencriptar(String datosEncriptados, String claveSecreta, String algoritmo)
             throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException,
             IllegalBlockSizeException, BadPaddingException {
-        SecretKeySpec secretKey = this.crearClave(claveSecreta);
+        SecretKeySpec secretKey = this.crearClave(claveSecreta, algoritmo);
 
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
@@ -136,33 +110,4 @@ public class EncriptadorAES {
         return datos;
     }
 
-    public void desencriptarArchivo(File inFile, File outFile, String claveSecreta)
-            throws FileNotFoundException {
-        FileInputStream in = new FileInputStream(inFile);
-        FileOutputStream out = new FileOutputStream(outFile);
-        byte[] ibuf = new byte[1024];
-        int len;
-        try {
-            SecretKeySpec secretKey = this.crearClave(claveSecreta);
-
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-
-            while ((len = in.read(ibuf)) != -1) {
-                byte[] obuf = cipher.update(ibuf, 0, len);
-                if (obuf != null)
-                    out.write(obuf);
-            }
-            byte[] obuf = cipher.doFinal();
-            if (obuf != null)
-                out.write(obuf);
-
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Catch: " + e.getMessage());
-        }
-
-    }
 }
