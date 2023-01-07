@@ -128,7 +128,6 @@ public class CifradoController {
                     response.put("metodo", data.getMetodo());
                     break;
                 case "RSA":
-                    rsa.generateKeys();
                     response.put("textoCifrado", rsa.encriptar(data.getTextoNormal()));
                     response.put("metodo", data.getMetodo());
                     break;
@@ -209,6 +208,10 @@ public class CifradoController {
                     break;
                 case "BLOWFISH":
                     response.put("textoDescifrado", blowFish.dec(data.getTextoCifrado()));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "RSA":
+                    response.put("textoDescifrado", rsa.desencriptar(data.getTextoCifrado()));
                     response.put("metodo", data.getMetodo());
                     break;
                 default:
