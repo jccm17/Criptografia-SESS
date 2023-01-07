@@ -5,11 +5,13 @@ import com.example.restapi.springbootapp.dto.DatoNormal;
 import com.example.restapi.springbootapp.dto.Datos;
 import com.example.restapi.springbootapp.utils.Blowfish;
 import com.example.restapi.springbootapp.utils.DesedeCrypter;
+import com.example.restapi.springbootapp.utils.Diffiehellman;
 import com.example.restapi.springbootapp.utils.EncriptadorAES;
 import com.example.restapi.springbootapp.utils.EncriptadorBase64;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles;
 import com.example.restapi.springbootapp.utils.EncriptadorMD5;
+import com.example.restapi.springbootapp.utils.RSAEncryption;
 import com.example.restapi.springbootapp.utils.Uploads;
 import com.example.restapi.springbootapp.utils.AES.FileEncrypterDecrypter;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles.Mode;
@@ -57,7 +59,7 @@ import javax.validation.Valid;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @OpenAPIDefinition(servers = { @Server(url = "https://encriptacion-sess.herokuapp.com/"),
-        @Server(url = "http://localhost:9090") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
+        @Server(url = "http://localhost:8080") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
 @RequestMapping("v1/")
 public class CifradoController {
@@ -74,6 +76,9 @@ public class CifradoController {
     EncriptadorIDEA idea = new EncriptadorIDEA(claveEncriptacion);
     EncriptadorIDEAFiles ideaFile = new EncriptadorIDEAFiles();
     Blowfish blowFish = new Blowfish();
+    RSAEncryption rsa = new RSAEncryption();
+    Diffiehellman encriptado = new Diffiehellman();
+    Diffiehellman desencriptado = new Diffiehellman();
 
     @Operation(summary = "Retorna Texto en cifrado")
     @ApiResponses(value = {
@@ -120,6 +125,19 @@ public class CifradoController {
                     break;
                 case "BLOWFISH":
                     response.put("textoCifrado", blowFish.enc(data.getTextoNormal()));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "RSA":
+                    rsa.generateKeys();
+                    response.put("textoCifrado", rsa.encriptar(data.getTextoNormal()));
+                    response.put("metodo", data.getMetodo());
+                    break;
+                case "DIFFIEHELLMAN":
+                    encriptado.generateCommonSecretKey();
+                    desencriptado.generateCommonSecretKey();
+                    encriptado.encryptAndSendMessage(data.getTextoNormal(), desencriptado);
+                    desencriptado.whisperTheSecretMessage();
+                    response.put("textoCifrado", data.getTextoNormal());
                     response.put("metodo", data.getMetodo());
                     break;
                 case "RC6":
@@ -232,6 +250,14 @@ public class CifradoController {
                 File fileinAES256 = new File(path);
                 aesFile.encryptFile(fileinAES256, "uploads/" + nameFileOut, claveEncriptacion, "SHA-256");
                 break;
+            case "AES-384":
+                File fileinAES384 = new File(path);
+                aesFile.encryptFile(fileinAES384, "uploads/" + nameFileOut, claveEncriptacion, "SHA-384");
+                break;
+            case "AES-512":
+                File fileinAES512 = new File(path);
+                aesFile.encryptFile(fileinAES512, "uploads/" + nameFileOut, claveEncriptacion, "SHA-512");
+                break;
             case "IDEA":
                 ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, true, Mode.ECB);
                 break;
@@ -291,6 +317,14 @@ public class CifradoController {
             case "AES-256":
                 File fileinAES256 = new File(path);
                 aesFile.decryptFile(fileinAES256, "uploads/" + nameFileOut, claveEncriptacion, "SHA-256");
+                break;
+            case "AES-384":
+                File fileinAES384 = new File(path);
+                aesFile.decryptFile(fileinAES384, "uploads/" + nameFileOut, claveEncriptacion, "SHA-384");
+                break;
+            case "AES-512":
+                File fileinAES512 = new File(path);
+                aesFile.decryptFile(fileinAES512, "uploads/" + nameFileOut, claveEncriptacion, "SHA-512");
                 break;
             case "IDEA":
                 ideaFile.cryptFile(path, "uploads/" + nameFileOut, claveEncriptacion, false, Mode.ECB);
