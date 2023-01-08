@@ -1,6 +1,14 @@
 package com.example.restapi.springbootapp.utils;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.util.Base64Utils;
 
 /**
  *
@@ -8,6 +16,7 @@ import java.util.Arrays;
  */
 public class EncriptadorRC6 {
 
+    static Logger logger = LogManager.getLogger(EncriptadorRC6.class);
     private static int w = 32;
     private static int r = 20;
     private static int Pw = 0xB7E15163;
@@ -16,6 +25,8 @@ public class EncriptadorRC6 {
     private static byte[] output;
     private static int counter = 0;
     private static int plainTextLength;
+    private static final byte[] MY_KEY = "5oquil2oo2vb63e8ionujny6".getBytes();// 24-byte
+    private static final String CHAR_ENCODING = "UTF-8";
 
     private static int rotateLeft(int n, int x) {
         return ((n << x) | (n >>> (w - x)));
@@ -223,70 +234,125 @@ public class EncriptadorRC6 {
         return convertToHex(regA, regB, regC, regD);
     }
 
-    /*
-     * Funkcijos pavadinimas encrypt
-     * Funkcijos paskirtis: Suskaidyti tekstą į atskirus blokus, kurie susidaro iš
-     * 16 elementų. Kadangi encryptBlock gali šifruoti tik 16 elementų masyvą vienu
-     * metu,
-     * todėl būtina tekstą išskaidyti į x dalių po 16 elementų. Šifruotus blokus
-     * įdedame į pagrindinį masyvą naudodamiesi mergeArrays funkcija.
-     */
-    public static byte[] encrypt(byte[] plainText, byte[] userKey) {
+    public String encrypt(byte[] plainText) {
+        String result;
         int blocks_number = plainText.length / 16 + 1;
         int block_counter = 0;
-        plainTextLength = plainText.length;
-        output = new byte[16 * blocks_number];
-        keyShedule(userKey);
-        for (int i = 0; i < blocks_number; i++) {
-            if (blocks_number == i + 1) {
-                mergeArrays(
-                        encryptBlock(fillBufferZeroes(Arrays.copyOfRange(plainText, block_counter, plainText.length))));
-                break;
+        try {
+            plainTextLength = plainText.length;
+            output = new byte[16 * blocks_number];
+            keyShedule(MY_KEY);
+            logger.info("Llave generada RC-6");
+            for (int i = 0; i < blocks_number; i++) {
+                if (blocks_number == i + 1) {
+                    mergeArrays(
+                            encryptBlock(
+                                    fillBufferZeroes(Arrays.copyOfRange(plainText, block_counter, plainText.length))));
+                    break;
+                }
+                mergeArrays(encryptBlock(Arrays.copyOfRange(plainText, block_counter, block_counter + 16)));
+                block_counter += 16;
             }
-            mergeArrays(encryptBlock(Arrays.copyOfRange(plainText, block_counter, block_counter + 16)));
-            block_counter += 16;
+            counter = 0;
+            logger.info("RC-6 Bytes: " + output);
+            byte[] encoded = Base64Utils.encode(output);
+            result = new String(encoded, CHAR_ENCODING);
+            return result;
+        } catch (Exception e) {
+            logger.error("Error: " + e.getMessage());
         }
-        counter = 0;
-        return output;
+        return null;
     }
 
-    /*
-     * Funkcijos pavadinimas decrypt
-     * Funkcijos paskirtis: Suskaidyti tekstą į atskirus blokus, kurie susidaro iš
-     * 16 elementų. Kadangi decryptBlock gali šifruoti tik 16 elementų masyvą vienu
-     * metu,
-     * todėl būtina tekstą išskaidyti į x dalių po 16 elementų. Išifruotus blokus
-     * įdedame į pagrindinį masyvą naudodamiesi mergeArrays funkcija.
-     */
-    public static byte[] decrypt(byte[] cipherText, byte[] userKey) {
-        int blocks_number = cipherText.length / 16 + 1;
+    public String decrypt(byte[] cipherText) {
+        String result;
+        byte[] decoded = Base64Utils.decode(cipherText);
+        int blocks_number = decoded.length / 16 + 1;
         int block_counter = 0;
-        output = new byte[16 * blocks_number];
-        keyShedule(userKey);
+        try {
+            output = new byte[16 * blocks_number];
+            keyShedule(MY_KEY);
 
-        for (int i = 0; i < blocks_number; i++) {
-            if (blocks_number == i + 1) {
-                mergeArrays(decryptBlock(
-                        fillBufferZeroes(Arrays.copyOfRange(cipherText, block_counter, cipherText.length))));
-                break;
+            for (int i = 0; i < blocks_number; i++) {
+                if (blocks_number == i + 1) {
+                    mergeArrays(decryptBlock(
+                            fillBufferZeroes(Arrays.copyOfRange(decoded, block_counter, decoded.length))));
+                    break;
+                }
+                mergeArrays(decryptBlock(Arrays.copyOfRange(decoded, block_counter, block_counter + 16)));
+                block_counter += 16;
             }
-            mergeArrays(decryptBlock(Arrays.copyOfRange(cipherText, block_counter, block_counter + 16)));
-            block_counter += 16;
+            counter = 0;
+            output = clearPadding(output);
+            logger.info("RC-6 Bytes: " + output);
+            result = new String(output, CHAR_ENCODING);
+            return result;
+        } catch (Exception e) {
+            logger.error("Error: " + e.getMessage());
         }
-        counter = 0;
+        return null;
+    }
 
-        return clearPadding(output);
+    public void encryptFile(byte[] file, String toFile) {
+        int blocks_number = file.length / 16 + 1;
+        int block_counter = 0;
+        try {
+            plainTextLength = file.length;
+            output = new byte[16 * blocks_number];
+            keyShedule(MY_KEY);
+            logger.info("Llave generada RC-6");
+            for (int i = 0; i < blocks_number; i++) {
+                if (blocks_number == i + 1) {
+                    mergeArrays(
+                            encryptBlock(
+                                    fillBufferZeroes(Arrays.copyOfRange(file, block_counter, file.length))));
+                    break;
+                }
+                mergeArrays(encryptBlock(Arrays.copyOfRange(file, block_counter, block_counter + 16)));
+                block_counter += 16;
+            }
+            counter = 0;
+            logger.info("RC-6 Bytes: " + output);
+            byte[] encoded = Base64Utils.encode(output);
+            Path path = Paths.get(toFile);
+            Files.write(path, encoded);
+        } catch (Exception e) {
+            logger.error("Error: " + e.getMessage());
+        }
+    }
+
+    public void decryptFile(byte[] cipherFile, String toFile) {
+        byte[] decoded = Base64Utils.decode(cipherFile);
+        int blocks_number = decoded.length / 16 + 1;
+        int block_counter = 0;
+        try {
+            output = new byte[16 * blocks_number];
+            keyShedule(MY_KEY);
+
+            for (int i = 0; i < blocks_number; i++) {
+                if (blocks_number == i + 1) {
+                    mergeArrays(decryptBlock(
+                            fillBufferZeroes(Arrays.copyOfRange(decoded, block_counter, decoded.length))));
+                    break;
+                }
+                mergeArrays(decryptBlock(Arrays.copyOfRange(decoded, block_counter, block_counter + 16)));
+                block_counter += 16;
+            }
+            counter = 0;
+            output = clearPadding(output);
+            logger.info("RC-6 Bytes: " + output);
+            Path path = Paths.get(toFile);
+            Files.write(path, output);
+        } catch (Exception e) {
+            logger.error("Error: " + e.getMessage());
+        }
     }
 
     /*
-     * Funkcijos pavadinimas: keyShedule
-     * Funkcijos argumentai: Šifravimo/dešifravimo raktas.
-     * Funckijos paskirtis: Sugeneruojamas Šifravimo/dešifravimo raktai.
-     * Rakto generavimo pseaudo kodas:
-     * https://people.csail.mit.edu/rivest/pubs/RRSY98.pdf
+     * Funcion: keyShedule
      */
 
-    private static void keyShedule(byte[] key) {
+    private void keyShedule(byte[] key) {
         int bytes = w / 8;
         int c = key.length / bytes;
         int[] L = new int[c];

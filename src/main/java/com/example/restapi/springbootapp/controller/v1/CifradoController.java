@@ -11,6 +11,7 @@ import com.example.restapi.springbootapp.utils.EncriptadorBase64;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
 import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles;
 import com.example.restapi.springbootapp.utils.EncriptadorMD5;
+import com.example.restapi.springbootapp.utils.EncriptadorRC6;
 import com.example.restapi.springbootapp.utils.RSAEncryption;
 import com.example.restapi.springbootapp.utils.Uploads;
 import com.example.restapi.springbootapp.utils.AES.FileEncrypterDecrypter;
@@ -59,7 +60,7 @@ import javax.validation.Valid;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @OpenAPIDefinition(servers = { @Server(url = "https://encriptacion-sess.herokuapp.com/"),
-        @Server(url = "http://localhost:8080") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
+        @Server(url = "http://localhost:9090") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
 @RequestMapping("v1/")
 public class CifradoController {
@@ -77,8 +78,9 @@ public class CifradoController {
     EncriptadorIDEAFiles ideaFile = new EncriptadorIDEAFiles();
     Blowfish blowFish = new Blowfish();
     RSAEncryption rsa = new RSAEncryption();
-    Diffiehellman encriptado = new Diffiehellman();
-    Diffiehellman desencriptado = new Diffiehellman();
+    //Diffiehellman encriptado = new Diffiehellman();
+    //Diffiehellman desencriptado = new Diffiehellman();
+    EncriptadorRC6 rc6 = new EncriptadorRC6();
 
     @Operation(summary = "Retorna Texto en cifrado")
     @ApiResponses(value = {
@@ -132,17 +134,14 @@ public class CifradoController {
                     response.put("metodo", data.getMetodo());
                     break;
                 case "DIFFIEHELLMAN":
-                    encriptado.generateCommonSecretKey();
-                    desencriptado.generateCommonSecretKey();
-                    encriptado.encryptAndSendMessage(data.getTextoNormal(), desencriptado);
-                    desencriptado.whisperTheSecretMessage();
+                    //encriptado.encryptAndSendMessage(data.getTextoNormal(), desencriptado);
+                    //desencriptado.whisperTheSecretMessage();
                     response.put("textoCifrado", data.getTextoNormal());
                     response.put("metodo", data.getMetodo());
                     break;
                 case "RC6":
-                    // byte[] text_byte = Files.readAllBytes(data.getTextoNormal());
-                    // byte[] key_byte = Files.readAllBytes(key_file);
-                    // response.put("textoCifrado", rc6.encrypt(data.getTextoNormal()));
+                    byte[] textBytes = data.getTextoNormal().getBytes();
+                    response.put("textoCifrado", rc6.encrypt(textBytes));
                     response.put("metodo", data.getMetodo());
                     break;
                 default:
@@ -214,6 +213,11 @@ public class CifradoController {
                     response.put("textoDescifrado", rsa.desencriptar(data.getTextoCifrado()));
                     response.put("metodo", data.getMetodo());
                     break;
+                case "RC6":
+                    byte[] textBytes = data.getTextoCifrado().getBytes();
+                    response.put("textoDescifrado", rc6.decrypt(textBytes));
+                    response.put("metodo", data.getMetodo());
+                    break;
                 default:
                     response.put("textoDescifrado", text);
                     response.put("metodo", "No definido, desconocido");
@@ -271,6 +275,16 @@ public class CifradoController {
                 break;
             case "BLOWFISH":
                 blowFish.blowfishEncrypt(path, "uploads/" + nameFileOut);
+                break;
+            case "RSA":
+                File fileinRSA = new File(path);
+                File fileoutRSA = new File("uploads/" + nameFileOut);
+                rsa.encriptarArchivo(fileinRSA, fileoutRSA);
+                break;
+            case "RC6":
+                File fileinRC6 = new File(path);
+                byte[] fileContent = Files.readAllBytes(fileinRC6.toPath());
+                rc6.encryptFile(fileContent, "uploads/" + nameFileOut);
                 break;
             default:
                 break;
@@ -339,6 +353,15 @@ public class CifradoController {
                 break;
             case "BLOWFISH":
                 blowFish.blowfishDecrypt(path, "uploads/" + nameFileOut);
+                break;
+            case "RSA":
+                File fileinRSA = new File(path);
+                rsa.desencriptarArchivo(fileinRSA, "uploads/" + nameFileOut);
+                break;
+            case "RC6":
+                File fileinRC6 = new File(path);
+                byte[] fileContent = Files.readAllBytes(fileinRC6.toPath());
+                rc6.decryptFile(fileContent, "uploads/" + nameFileOut);
                 break;
             default:
                 break;

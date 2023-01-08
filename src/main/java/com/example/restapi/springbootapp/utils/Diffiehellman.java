@@ -29,6 +29,10 @@ public class Diffiehellman {
     private byte[] secretKey;
     private String secretMessage;
 
+    public Diffiehellman() {
+        generateCommonSecretKey();
+    }
+
     // ~ --- [METHODS]
     // --------------------------------------------------------------------------------------------------
     public void encryptAndSendMessage(final String message, final Diffiehellman person) {
@@ -51,7 +55,6 @@ public class Diffiehellman {
     }
 
     public void generateCommonSecretKey() {
-        //generateKeys();
         try {
             final KeyAgreement keyAgreement = KeyAgreement.getInstance("DH");
             keyAgreement.init(privateKey);
