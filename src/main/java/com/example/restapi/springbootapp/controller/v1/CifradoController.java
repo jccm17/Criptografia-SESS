@@ -60,7 +60,7 @@ import javax.validation.Valid;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @OpenAPIDefinition(servers = { @Server(url = "https://encriptacion-sess.herokuapp.com/"),
-        @Server(url = "http://localhost:9090") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
+        @Server(url = "http://localhost:8080") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
 @RequestMapping("v1/")
 public class CifradoController {
