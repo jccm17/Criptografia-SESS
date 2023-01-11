@@ -78,8 +78,8 @@ public class CifradoController {
     EncriptadorIDEAFiles ideaFile = new EncriptadorIDEAFiles();
     Blowfish blowFish = new Blowfish();
     RSAEncryption rsa = new RSAEncryption();
-    //Diffiehellman encriptado = new Diffiehellman();
-    //Diffiehellman desencriptado = new Diffiehellman();
+    // Diffiehellman encriptado = new Diffiehellman();
+    // Diffiehellman desencriptado = new Diffiehellman();
     EncriptadorRC6 rc6 = new EncriptadorRC6();
 
     @Operation(summary = "Retorna Texto en cifrado")
@@ -134,8 +134,8 @@ public class CifradoController {
                     response.put("metodo", data.getMetodo());
                     break;
                 case "DIFFIEHELLMAN":
-                    //encriptado.encryptAndSendMessage(data.getTextoNormal(), desencriptado);
-                    //desencriptado.whisperTheSecretMessage();
+                    // encriptado.encryptAndSendMessage(data.getTextoNormal(), desencriptado);
+                    // desencriptado.whisperTheSecretMessage();
                     response.put("textoCifrado", data.getTextoNormal());
                     response.put("metodo", data.getMetodo());
                     break;
@@ -282,9 +282,9 @@ public class CifradoController {
                 rsa.encriptarArchivo(fileinRSA, fileoutRSA);
                 break;
             case "RC6":
+                File fileoutRC6 = new File("uploads/" + nameFileOut);
                 File fileinRC6 = new File(path);
-                byte[] fileContent = Files.readAllBytes(fileinRC6.toPath());
-                rc6.encryptFile(fileContent, "uploads/" + nameFileOut);
+                rc6.encryptFile(fileinRC6, fileoutRC6, claveEncriptacion);
                 break;
             default:
                 break;
@@ -360,8 +360,7 @@ public class CifradoController {
                 break;
             case "RC6":
                 File fileinRC6 = new File(path);
-                byte[] fileContent = Files.readAllBytes(fileinRC6.toPath());
-                rc6.decryptFile(fileContent, "uploads/" + nameFileOut);
+                rc6.decryptFile(fileinRC6, "uploads/" + nameFileOut, claveEncriptacion);
                 break;
             default:
                 break;

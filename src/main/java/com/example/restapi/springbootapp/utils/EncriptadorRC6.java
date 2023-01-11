@@ -1,15 +1,24 @@
 package com.example.restapi.springbootapp.utils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.Arrays;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.util.Base64Utils;
-
 /**
  *
  * @author Jccm.17
@@ -27,7 +36,19 @@ public class EncriptadorRC6 {
     private static int plainTextLength;
     private static final byte[] MY_KEY = "5oquil2oo2vb63e8ionujny6".getBytes();// 24-byte
     private static final String CHAR_ENCODING = "UTF-8";
+    public static final int MAX_ENCRYPT_BLOCK = 245;
+    public static final int MAX_DECRYPT_BLOCK = 256;
 
+    private static String ALGORITHM_NAME = "RC6";
+    private static String MODE_OF_OPERATION = "ECB";
+    private static String PADDING_SCHEME = "PKCS5Padding";
+    private static SecretKey secretKey;
+    private final static int RC6_KEYLENGTH = 128;
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+    
     private static int rotateLeft(int n, int x) {
         return ((n << x) | (n >>> (w - x)));
     }
@@ -37,15 +58,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funkcijos pavadinimas: convertToHex
-     * Funkcijos argumentai: Registrų blokai A, B, C ir D.
-     * Funkcija gražina: Konvertuotų blokų HEX bitų masyvą.
-     * Funckijos paskirtis: Konvertuojama į hex formato tekstinį lauką iš bitų
-     * masyvo.
-     * Konvertavimo eiga: 1) Registrai A, B, C, D yra konvertuojami į
-     * 16-liktainės(HEX) String duomenų tipą.
-     * 2) Iš String duomenų tipo blokiniai registrai yra konvertuojami į HEX.
-     * 3) Kiekvieno HEX registrų reikšmės įrašomos į baitinį masyvą.
+     * Funcion: convertToHex
      */
 
     private static byte[] convertToHex(int regA, int regB, int regC, int regD) {
@@ -64,8 +77,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funkcijos pavadinimas: mergeArrays
-     * Funkcijos paskirtis: Prijungia prie pagrindinio masyvo bloką.
+     * Funcion: mergeArrays
      */
     private static void mergeArrays(byte[] array) {
         for (int i = 0; i < array.length; i++) {
@@ -75,9 +87,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funkcijos pavadinimas: fillBufferZeroes
-     * Funkcijos paskirtis: Jeigu blokas nesudaro 16 elementų, tuomet visos laisvos
-     * vietos pripildomos 0 reikšmėmis.
+     * Funcion: fillBufferZeroes
      */
     private static byte[] fillBufferZeroes(byte[] plainText) {
         int length = 16 - plainText.length % 16;
@@ -92,9 +102,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funkcijos pavadinimas: clearPadding
-     * Funkcijos paskirtis: Išvalyti nereikalingus 0, kurie buvo sukurti funkcijos
-     * fillBufferZeroes.
+     * Funcion: clearPadding
      */
     private static byte[] clearPadding(byte[] cipherText) {
         byte[] answer = new byte[getBounds(cipherText)];
@@ -108,9 +116,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funckijos pavadinimas: getBounds
-     * Funkcijos paskirtis: Gražinti masyvo indeksą, kuris žymi nuo kurios vietos
-     * buvo panaudota fillBufferZeroes funkcija.
+     * Funcion: getBounds
      */
 
     private static int getBounds(byte[] cipherText) {
@@ -123,24 +129,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funckijos pavadinimas: encryptBlock.
-     * Funkcijos argumentai: 1) Šifruojamas tekstas, kurio String reikšmės
-     * konvertuotos į baitus pagal ASCII lentelę (http://www.asciitable.com/)
-     * 2) Šifruojamas raktas, kurio String reikšmės konvertuotos į baitus pagal
-     * ASCII lentelę (http://www.asciitable.com/)
-     * Funkcija gražina: HEX formato bitų masyvą sugeneruotą iš A, B, C, D
-     * registrinių blokų.
-     * Funckijos paskirtis: Tekstas šifruojamas pagal RC6 algoritmą.
-     * Šifravimo eiga: 1) Šifravimo tekstas patalpinamas į 4 registrų blokus: A, B,
-     * C, D.
-     * 2) Sugeneruojamas blokinis raktų masyvas.
-     * 3) Suskirstytus registrinius blokus A, B, C, D šifruojame pagal RC6 šifravimo
-     * algoritmą
-     * 4) Kiekvieną šifruotą registro reikšmę iš Integer duomenų tipo verčiame į HEX
-     * formatą ir išsaugome į bitų masyvą
-     * RC6 šifravimo pseaudo kodo šaltinis: 1)
-     * https://people.csail.mit.edu/rivest/pubs/RRSY98.pdf
-     * 2) https://en.wikipedia.org/wiki/RC6
+     * Funcion: encryptBlock.
      */
     private static byte[] encryptBlock(byte[] plainText) {
 
@@ -179,24 +168,7 @@ public class EncriptadorRC6 {
     }
 
     /*
-     * Funckijos pavadinimas: decryptBlock.
-     * Funkcijos argumentai: 1) Šifruojamas tekstas, kurio tekstinės reikšmės
-     * konvertuotos į baitus pagal ASCII lentelę (http://www.asciitable.com/)
-     * 2) Šifruojamas raktas, kurio tekstinės reikšmės konvertuotos į baitus pagal
-     * ASCII lentelę (http://www.asciitable.com/)
-     * Funkcija gražina: HEX formato bitų masyvą sugeneruotą iš A, B, C, D
-     * registrinių blokų.
-     * Funckijos paskirtis: Šifruotas tekstas dešifruojamas pagal RC6 algoritmą.
-     * Šifravimo eiga: 1) Šifruotas tekstas patalpinamas į 4 registrų blokus: A, B,
-     * C, D.
-     * 2) Sugeneruojamas blokinis raktų masyvas.
-     * 3) Suskirstytus registrinius blokus A, B, C, D dešifruojame pagal RC6
-     * šifravimo algoritmą
-     * 4) Kiekvieną dešifruotą registro reikšmę iš Integer duomenų tipo verčiame į
-     * HEX formatą ir išsaugome į bitų masyvą
-     * RC6 šifravimo pseaudo kodo šaltinis: 1)
-     * https://people.csail.mit.edu/rivest/pubs/RRSY98.pdf
-     * 2) https://en.wikipedia.org/wiki/RC6
+     * Funcion: decryptBlock.
      */
 
     private static byte[] decryptBlock(byte[] cipherText) {
@@ -292,62 +264,6 @@ public class EncriptadorRC6 {
         }
         return null;
     }
-
-    public void encryptFile(byte[] file, String toFile) {
-        int blocks_number = file.length / 16 + 1;
-        int block_counter = 0;
-        try {
-            plainTextLength = file.length;
-            output = new byte[16 * blocks_number];
-            keyShedule(MY_KEY);
-            logger.info("Llave generada RC-6");
-            for (int i = 0; i < blocks_number; i++) {
-                if (blocks_number == i + 1) {
-                    mergeArrays(
-                            encryptBlock(
-                                    fillBufferZeroes(Arrays.copyOfRange(file, block_counter, file.length))));
-                    break;
-                }
-                mergeArrays(encryptBlock(Arrays.copyOfRange(file, block_counter, block_counter + 16)));
-                block_counter += 16;
-            }
-            counter = 0;
-            logger.info("RC-6 Bytes: " + output);
-            byte[] encoded = Base64Utils.encode(output);
-            Path path = Paths.get(toFile);
-            Files.write(path, encoded);
-        } catch (Exception e) {
-            logger.error("Error: " + e.getMessage());
-        }
-    }
-
-    public void decryptFile(byte[] cipherFile, String toFile) {
-        byte[] decoded = Base64Utils.decode(cipherFile);
-        int blocks_number = decoded.length / 16 + 1;
-        int block_counter = 0;
-        try {
-            output = new byte[16 * blocks_number];
-            keyShedule(MY_KEY);
-
-            for (int i = 0; i < blocks_number; i++) {
-                if (blocks_number == i + 1) {
-                    mergeArrays(decryptBlock(
-                            fillBufferZeroes(Arrays.copyOfRange(decoded, block_counter, decoded.length))));
-                    break;
-                }
-                mergeArrays(decryptBlock(Arrays.copyOfRange(decoded, block_counter, block_counter + 16)));
-                block_counter += 16;
-            }
-            counter = 0;
-            output = clearPadding(output);
-            logger.info("RC-6 Bytes: " + output);
-            Path path = Paths.get(toFile);
-            Files.write(path, output);
-        } catch (Exception e) {
-            logger.error("Error: " + e.getMessage());
-        }
-    }
-
     /*
      * Funcion: keyShedule
      */
@@ -376,6 +292,80 @@ public class EncriptadorRC6 {
             B = L[j] = rotateLeft(L[j] + A + B, A + B);
             i = (i + 1) % (2 * r + 4);
             j = (j + 1) % c;
+        }
+    }
+
+    public void setKey(String secret) {
+        try {
+            byte[] key = secret.getBytes("UTF-8");            
+            MessageDigest sha = MessageDigest.getInstance("SHA-1");
+            byte[] digestOfPassword = sha.digest(key);
+            byte[] keyBytes = Arrays.copyOf(digestOfPassword, RC6_KEYLENGTH);
+            secretKey = new SecretKeySpec(keyBytes, ALGORITHM_NAME);
+            System.out.println(secretKey.getEncoded());
+            logger.info("Clave Generado: " + secretKey.getEncoded());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void encryptFile(File fromFile, File toFile, String clave) throws Exception {
+        // read a file
+        byte[] fileContent = Files.readAllBytes(fromFile.toPath());
+        setKey(clave);
+        try {
+            Cipher encryptionCipher = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
+            encryptionCipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            int inputLen = fileContent.length;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            int offSet = 0;
+            byte[] cache;
+            int i = 0;
+            while (inputLen - offSet > 0) {
+                if (inputLen - offSet > MAX_ENCRYPT_BLOCK) {
+                    cache = encryptionCipher.doFinal(fileContent, offSet, MAX_ENCRYPT_BLOCK);
+                } else {
+                    cache = encryptionCipher.doFinal(fileContent, offSet, inputLen - offSet);
+                }
+                out.write(cache, 0, cache.length);
+                i++;
+                offSet = i * MAX_ENCRYPT_BLOCK;
+            }
+            byte[] decryptedData = out.toByteArray();
+            out.close();
+            // save a file
+            FileOutputStream fos = new FileOutputStream(toFile);
+            fos.write(decryptedData);
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error message = " + e.getMessage());
+
+        }
+    }
+
+    public void decryptFile(File fromEncryptedFile, String toFile, String clave) throws Exception {
+        // read a file
+        byte[] fileContent = Files.readAllBytes(fromEncryptedFile.toPath());
+        setKey(clave);
+        try {
+            Cipher decryptionCipher = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
+            decryptionCipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] enBytes = null;
+            for (int i = 0; i < fileContent.length; i += 256) {
+                byte[] doFinal = decryptionCipher.doFinal(ArrayUtils.subarray(fileContent, i, i + 256));
+                enBytes = ArrayUtils.addAll(enBytes, doFinal);
+            }
+            // save a file
+            FileOutputStream fos = new FileOutputStream(toFile);
+            fos.write(enBytes);
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error message = " + e.getMessage());
+
         }
     }
 }
