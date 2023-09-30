@@ -1,48 +1,5 @@
 package com.example.restapi.springbootapp.controller.v1;
 
-import com.example.restapi.springbootapp.dto.ArchivoNormal;
-import com.example.restapi.springbootapp.dto.DatoNormal;
-import com.example.restapi.springbootapp.dto.Datos;
-import com.example.restapi.springbootapp.utils.Blowfish;
-import com.example.restapi.springbootapp.utils.DesedeCrypter;
-import com.example.restapi.springbootapp.utils.Diffiehellman;
-import com.example.restapi.springbootapp.utils.EncriptadorAES;
-import com.example.restapi.springbootapp.utils.EncriptadorBase64;
-import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
-import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles;
-import com.example.restapi.springbootapp.utils.EncriptadorMD5;
-import com.example.restapi.springbootapp.utils.EncriptadorRC6;
-import com.example.restapi.springbootapp.utils.RSAEncryption;
-import com.example.restapi.springbootapp.utils.Uploads;
-import com.example.restapi.springbootapp.utils.AES.FileEncrypterDecrypter;
-import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles.Mode;
-
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Contact;
-import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.info.License;
-import io.swagger.v3.oas.annotations.servers.Server;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.LogManager;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,12 +11,54 @@ import java.util.UUID;
 
 import javax.validation.Valid;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.restapi.springbootapp.dto.ArchivoNormal;
+import com.example.restapi.springbootapp.dto.DatoNormal;
+import com.example.restapi.springbootapp.dto.Datos;
+import com.example.restapi.springbootapp.utils.Blowfish;
+import com.example.restapi.springbootapp.utils.DesedeCrypter;
+import com.example.restapi.springbootapp.utils.EncriptadorAES;
+import com.example.restapi.springbootapp.utils.EncriptadorBase64;
+import com.example.restapi.springbootapp.utils.EncriptadorIDEA;
+import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles;
+import com.example.restapi.springbootapp.utils.EncriptadorIDEAFiles.Mode;
+import com.example.restapi.springbootapp.utils.EncriptadorMD5;
+import com.example.restapi.springbootapp.utils.EncriptadorRC6;
+import com.example.restapi.springbootapp.utils.RSAEncryption;
+import com.example.restapi.springbootapp.utils.Uploads;
+import com.example.restapi.springbootapp.utils.AES.FileEncrypterDecrypter;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.servers.Server;
+
 /**
  *
  * @author Jccm.17
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
-@OpenAPIDefinition(servers = { @Server(url = "https://encriptacion-sess.herokuapp.com/"),
+@OpenAPIDefinition(servers = { @Server(url = "http://encriptacion-sess.us-east-1.elasticbeanstalk.com/"),
         @Server(url = "http://localhost:8080") }, info = @Info(title = "Encriptacion Spring Boot API", version = "v1", description = "A project using Spring Boot with Swagger-UI enabled", license = @License(name = "MIT License", url = "#"), contact = @Contact(url = "https://www.jccm.xyz", name = "SESS")))
 @RestController
 @RequestMapping("v1/")

@@ -12,11 +12,14 @@
 	<groupId>com.example.restapi</groupId>
 	<artifactId>springbootapp</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>springbootapp</name>
 	<description>A demo project using Spring Boot with Swagger-UI enabled</description>
 
 	<properties>
 		<java.version>11</java.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+    	<maven.compiler.target>${java.version}</maven.compiler.target>
 		<openapi.version>1.4.3</openapi.version>
 	</properties>
 
